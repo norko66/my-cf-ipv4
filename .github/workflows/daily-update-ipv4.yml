@@ -1,0 +1,30 @@
+name: Daily Fetch CF IPs
+
+on:
+  schedule:
+    # 北京时间每天早上 04:00 自动运行
+    - cron: '0 20 * * *'
+  workflow_dispatch: # 支持手动测试触发
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch and Filter IPs
+        run: |
+          # 获取 IPv4 并截取前 80 个
+          curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 80 > best-cf-ipv4.txt
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add best-cf-ipv4.txt
+          git commit -m "Auto update best CF IPv4" || exit 0
+          git push
