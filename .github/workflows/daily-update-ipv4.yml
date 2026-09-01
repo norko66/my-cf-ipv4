@@ -16,15 +16,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Fetch and Filter IPs
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
         run: |
-          # 获取 IPv4 并截取前 80 个
+          pip install beautifulsoup4
+
+      - name: Fetch IPs
+        run: |
+          # 1. 获取 IPv4 并截取前 80 个
           curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 80 > best-cf-ipv4.txt
+          
+          # 2. 运行 Python 脚本抓取网页真实的 IPv6 数据
+          python fetch_v6.py
 
       - name: Commit and Push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add best-cf-ipv4.txt
-          git commit -m "Auto update best CF IPv4" || exit 0
+          git add best-cf-ipv4.txt best-cf-ipv6.txt
+          git commit -m "Auto update best CF IPv4 and IPv6" || exit 0
           git push
