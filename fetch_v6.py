@@ -12,6 +12,8 @@ headers = {
     )
 }
 
+# 1. 抓取并解析网页上的 IPv6
+ipv6_list = []
 try:
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req) as response:
@@ -20,7 +22,6 @@ try:
     soup = BeautifulSoup(html, "html.parser")
     rows = soup.find_all("tr")
 
-    results = []
     for row in rows:
         isp_td = row.find("td", {"data-label": "线路名称"})
         ip_td = row.find("td", {"data-label": "优选地址"})
@@ -35,16 +36,34 @@ try:
             dc_match = re.search(r"([A-Z]{3})", dc_raw)
             dc = dc_match.group(1) if dc_match else dc_raw
 
-            # 过滤有效的 IPv6 地址格式
             if ":" in ip:
-                results.append(f"{ip}#{isp}-{dc}")
+                ipv6_list.append(f"{ip}#{isp}-{dc}")
 
-    # 保存为 best-cf-ipv6.txt
-    with open("best-cf-ipv6.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(results) + "\n")
-
-    print(f"成功抓取并生成 {len(results)} 条 IPv6 记录！")
-
+    print(f"成功抓取 {len(ipv6_list)} 条 IPv6 记录")
 except Exception as e:
-    print(f"抓取失败: {e}")
-    exit(1)
+    print(f"IPv6 抓取失败: {e}")
+
+# 2. 读取之前抓取好的 IPv4 文本，加上统一备注，并与 IPv6 合并
+combined_results = []
+
+try:
+    with open("best-cf-ipv4.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            ip = line.strip()
+            if ip:
+                # 如果原 IPv4 已经带有 # 备注则保持原样，否则加上 #IPv4-CF 备注
+                if "#" in ip:
+                    combined_results.append(ip)
+                else:
+                    combined_results.append(f"{ip}#IPv4-CF")
+except Exception as e:
+    print(f"读取 IPv4 文件失败或文件不存在: {e}")
+
+# 追加 IPv6 数据（回车拼接）
+combined_results.extend(ipv6_list)
+
+# 3. 输出合并后的单一文件 best-cf-ip.txt
+with open("best-cf-ip.txt", "w", encoding="utf-8") as f:
+    f.write("\n".join(combined_results) + "\n")
+
+print(f"合并完成！总计生成 {len(combined_results)} 条 IP 记录至 best-cf-ip.txt")
