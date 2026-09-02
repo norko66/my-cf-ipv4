@@ -10,9 +10,7 @@ headers = {
     )
 }
 
-# -------------------------------------------------------------------
 # 1. 抓取 wetest.vip 网页上的 IPv6
-# -------------------------------------------------------------------
 wetest_url = "https://www.wetest.vip/page/cloudflare/address_v6.html"
 wetest_ipv6_list = []
 
@@ -38,19 +36,16 @@ try:
             dc = dc_match.group(1) if dc_match else dc_raw
 
             if ":" in ip:
-                wetest_ipv6_list.append(f"[{ip}]:443#IPV6-{isp}-{dc}")
+                # 兼容 Worker：不加中括号，保留纯 IPv6:443 格式
+                wetest_ipv6_list.append(f"{ip}:443#IPV6-{isp}-{dc}")
 
     print(f"成功抓取 wetest.vip {len(wetest_ipv6_list)} 条 IPv6 记录")
 except Exception as e:
     print(f"wetest.vip 抓取失败: {e}")
 
-# -------------------------------------------------------------------
 # 2. 抓取 ipdb.030101.xyz/bestcfv6/ 网页上的 IPv6
-# -------------------------------------------------------------------
 ipdb_url = "https://ipdb.030101.xyz/bestcfv6/"
 ipdb_ipv6_list = []
-
-# 正则表达式：识别标准 IPv6 地址
 ipv6_pattern = re.compile(r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}')
 
 try:
@@ -58,23 +53,19 @@ try:
     with urllib.request.urlopen(req, timeout=10) as response:
         html = response.read().decode("utf-8")
 
-    # 在页面源码中正则查找所有匹配的 IPv6 地址
     found_ips = ipv6_pattern.findall(html)
-    
-    # 过滤去重并格式化
     seen_ips = set()
     for idx, ip in enumerate(found_ips, start=1):
         if ip not in seen_ips and ":" in ip:
             seen_ips.add(ip)
-            ipdb_ipv6_list.append(f"[{ip}]:443#IPV6-IPDB优选-{idx}")
+            # 兼容 Worker：不加中括号
+            ipdb_ipv6_list.append(f"{ip}:443#IPV6-IPDB优选-{idx}")
 
     print(f"成功抓取 ipdb.030101.xyz {len(ipdb_ipv6_list)} 条 IPv6 记录")
 except Exception as e:
     print(f"ipdb.030101.xyz 抓取失败: {e}")
 
-# -------------------------------------------------------------------
 # 3. 读取本地 IPv4 列表
-# -------------------------------------------------------------------
 combined_results = []
 
 try:
@@ -86,9 +77,7 @@ try:
 except Exception as e:
     print(f"读取 IPv4 文件失败: {e}")
 
-# -------------------------------------------------------------------
-# 4. 合并所有数据 (IPv4 -> wetest IPv6 -> ipdb IPv6 -> 自定义域名)
-# -------------------------------------------------------------------
+# 4. 合并所有数据
 combined_results.extend(wetest_ipv6_list)
 combined_results.extend(ipdb_ipv6_list)
 
@@ -108,10 +97,8 @@ domain_list = [
 
 combined_results.extend(domain_list)
 
-# -------------------------------------------------------------------
-# 5. 输出合并后的文件 best-cf-ip.txt
-# -------------------------------------------------------------------
-with open("best-cf-ip.txt", "w", encoding="utf-8") as f:
+# 5. 写入文件（明确使用 newline='\n' 避免 Windows 换行符问题）
+with open("best-cf-ip.txt", "w", encoding="utf-8", newline='\n') as f:
     f.write("\n".join(combined_results) + "\n")
 
 print(f"合并完成！总计写入 {len(combined_results)} 条记录至 best-cf-ip.txt")
