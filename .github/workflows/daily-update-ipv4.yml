@@ -27,8 +27,8 @@ jobs:
 
       - name: Fetch and Merge IPs
         run: |
-          # 1. 获取 IPv4 并截取前 80 个
-          curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 80 > best-cf-ipv4.txt
+          # 1. 获取 IPv4 并截取前 40 个
+          curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 40 > best-cf-ipv4.txt
           
           # 2. 运行 Python 脚本提取网页 IPv6 并与 IPv4 合并生成 best-cf-ip.txt
           python fetch_v6.py
