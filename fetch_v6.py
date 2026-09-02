@@ -97,8 +97,29 @@ domain_list = [
 
 combined_results.extend(domain_list)
 
-# 5. 写入文件（明确使用 newline='\n' 避免 Windows 换行符问题）
-with open("best-cf-ip.txt", "w", encoding="utf-8", newline='\n') as f:
-    f.write("\n".join(combined_results) + "\n")
+# 5. 处理节点名称去重，并写入文件
 
-print(f"合并完成！总计写入 {len(combined_results)} 条记录至 best-cf-ip.txt")
+final_results = []
+name_counter = {}
+
+for item in combined_results:
+    if "#" in item:
+        ip_part, name_part = item.split("#", 1)
+        
+        # 统计名称出现次数
+        if name_part in name_counter:
+            name_counter[name_part] += 1
+            unique_name = f"{name_part}-{name_counter[name_part]}"
+        else:
+            name_counter[name_part] = 1
+            unique_name = name_part  # 若想统一带后缀，可改为 f"{name_part}-1"
+            
+        final_results.append(f"{ip_part}#{unique_name}")
+    else:
+        final_results.append(item)
+
+# 写入文件（只保留这一处写入即可，确保写入的是 final_results）
+with open("best-cf-ip.txt", "w", encoding="utf-8", newline='\n') as f:
+    f.write("\n".join(final_results) + "\n")
+
+print(f"合并完成！总计写入 {len(final_results)} 条无重复名称记录至 best-cf-ip.txt")
