@@ -66,21 +66,18 @@ except Exception as e:
     print(f"ipdb.030101.xyz 抓取失败: {e}")
 
 # 3. 读取本地 IPv4 列表
-combined_results = []
+ipv4_list = []
 
 try:
     with open("best-cf-ipv4.txt", "r", encoding="utf-8") as f:
         for line in f:
             ip = line.strip()
             if ip:
-                combined_results.append(ip)
+                ipv4_list.append(ip)
 except Exception as e:
     print(f"读取 IPv4 文件失败: {e}")
 
-# 4. 合并所有数据
-combined_results.extend(wetest_ipv6_list)
-combined_results.extend(ipdb_ipv6_list)
-
+# 自定义优选域名列表
 domain_list = [
     "123.cf.090227.xyz:443#CMLIU优选域名",
     "www.visa.cn:443#VISA官方优选域名",
@@ -95,10 +92,14 @@ domain_list = [
     "cf.cloudflare.182682.xyz:443#WETEST优选域名",
 ]
 
-combined_results.extend(domain_list)
+# 4. 按顺序合并所有数据： IPv4 -> 优选域名 -> IPv6节点 (Wetest + IPDB)
+combined_results = []
+combined_results.extend(ipv4_list)          # 1. 放入 IPv4
+combined_results.extend(domain_list)        # 2. 放入 优选域名
+combined_results.extend(wetest_ipv6_list)   # 3. 放入 IPv6 (wetest)
+combined_results.extend(ipdb_ipv6_list)     # 4. 放入 IPv6 (ipdb)
 
 # 5. 处理节点名称去重，并写入文件
-
 final_results = []
 name_counter = {}
 
@@ -112,14 +113,14 @@ for item in combined_results:
             unique_name = f"{name_part}-{name_counter[name_part]}"
         else:
             name_counter[name_part] = 1
-            unique_name = name_part  # 若想统一带后缀，可改为 f"{name_part}-1"
+            unique_name = name_part
             
         final_results.append(f"{ip_part}#{unique_name}")
     else:
         final_results.append(item)
 
-# 写入文件（只保留这一处写入即可，确保写入的是 final_results）
+# 写入文件
 with open("best-cf-ip.txt", "w", encoding="utf-8", newline='\n') as f:
     f.write("\n".join(final_results) + "\n")
 
-print(f"合并完成！总计写入 {len(final_results)} 条无重复名称记录至 best-cf-ip.txt")
+print(f"合并完成！按 [IPv4 -> 域名 -> IPv6] 顺序排列，总计写入 {len(final_results)} 条无重复名称记录至 best-cf-ip.txt")
