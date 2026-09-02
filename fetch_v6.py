@@ -37,13 +37,14 @@ try:
             dc = dc_match.group(1) if dc_match else dc_raw
 
             if ":" in ip:
-                ipv6_list.append(f"{ip}#{isp}-{dc}")
+                # 拼接端口号 :443 以及 IPV6- 备注前缀
+                ipv6_list.append(f"{ip}:443#IPV6-{isp}-{dc}")
 
     print(f"成功抓取 {len(ipv6_list)} 条 IPv6 记录")
 except Exception as e:
     print(f"IPv6 抓取失败: {e}")
 
-# 2. 读取之前抓取好的 IPv4 文本，加上统一备注，并与 IPv6 合并
+# 2. 读取之前抓取好的 IPv4 文本，保持原样读取并合并
 combined_results = []
 
 try:
@@ -51,7 +52,7 @@ try:
         for line in f:
             ip = line.strip()
             if ip:
-                # 如果原 IPv4 已经带有 # 备注则保持原样，否则加上 #IPv4-CF 备注
+                # IPv4 不做变动，如果没备注默认加上 #IPv4-CF 区分
                 if "#" in ip:
                     combined_results.append(ip)
                 else:
@@ -59,7 +60,7 @@ try:
 except Exception as e:
     print(f"读取 IPv4 文件失败或文件不存在: {e}")
 
-# 追加 IPv6 数据（回车拼接）
+# 追加处理好的 IPv6 数据（回车换行拼接）
 combined_results.extend(ipv6_list)
 
 # 3. 输出合并后的单一文件 best-cf-ip.txt
