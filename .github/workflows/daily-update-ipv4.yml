@@ -25,18 +25,18 @@ jobs:
         run: |
           pip install beautifulsoup4
 
-      - name: Fetch IPs
+      - name: Fetch and Merge IPs
         run: |
-          # 1. 获取 IPv4 并截取前45个优选IP地址
-          curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 45 > best-cf-ipv4.txt
+          # 1. 获取 IPv4 并截取前 80 个
+          curl -s https://raw.githubusercontent.com/LancelotRar/best-cf-ips/main/best-cf-ipv4.txt | head -n 80 > best-cf-ipv4.txt
           
-          # 2. 运行 Python 脚本抓取网页真实的 IPv6 数据
+          # 2. 运行 Python 脚本提取网页 IPv6 并与 IPv4 合并生成 best-cf-ip.txt
           python fetch_v6.py
 
       - name: Commit and Push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add best-cf-ipv4.txt best-cf-ipv6.txt
-          git commit -m "Auto update best CF IPv4 and IPv6" || exit 0
+          git add best-cf-ipv4.txt best-cf-ip.txt
+          git commit -m "Auto update merged best CF IPs" || exit 0
           git push
